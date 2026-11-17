@@ -1,0 +1,99 @@
+---
+titulo: "From 80% to 13% error: an LLM pipeline that extracts the reasoning of legal decisions"
+titulo_curto: "Legal-decision extraction pipeline"
+resumo: "I redesigned, evaluated, and moved to open-weight models an LLM pipeline that extracts the reasoning of long legal decisions for a public-sector client. The error rate fell from 80% to 13% in a paired evaluation with domain experts."
+organizacao: FGV EMAp
+papel: AI Consultant
+periodo: Oct 2025 – present
+camadas: [prompt-engineering, orquestracao, resultado-mensuravel]
+status_publicacao: pronto
+ordem: 2
+frase_destaque: "Error reduced by 84% (80% → 13%) and completeness increased by 55% (54% → 84%)."
+stack:
+  - Proprietary frontier model
+  - Open-weight models
+  - Structured JSON output
+  - Python
+  - Embeddings
+  - Wald test
+  - Wilson interval
+---
+
+import PipelineDiagram from '../../../components/PipelineDiagram.astro';
+import ResultsTable from '../../../components/ResultsTable.astro';
+import BeforeAfterBar from '../../../components/BeforeAfterBar.astro';
+
+## Context and problem
+
+A public-sector organization uses an LLM pipeline in production to build a
+legal knowledge base from long decisions. The pipeline extracts the parties'
+arguments, extracts the reasoning behind each decision, and synthesizes the
+final holding. An earlier expert review had found errors in most outputs.
+
+The pipeline is sequential, so an early error contaminates every later step,
+and the solution had to run on the client's own infrastructure with
+open-weight models.
+
+## What was done
+
+<PipelineDiagram
+  rotulo="Extraction pipeline, from segmentation to the knowledge base"
+  etapas={['Segmentation', 'Extraction', 'Synthesis', 'Verification', 'Knowledge base']}
+/>
+
+- **Phase 1:** rebuilt the prompts with domain experts on a frontier model and
+  measured the gain with a paired evaluation: the same documents, before and
+  after, with a formal significance test.
+- **Phase 2:** carried the improvement to the open-weight model used in
+  production, with better document segmentation and automatic checks that
+  flag suspicious outputs for human review.
+- **Phase 3:** evaluated candidate models with prompts and documents held
+  fixed, to separate the gain from the prompts from the gain from the model.
+
+## My contribution
+
+- Led the project team
+- Technical participation in every activity:
+  - Design of the task and of the prompt architecture
+  - Running the refinement cycles with the experts
+  - Design of the paired evaluation protocol and the statistical analysis
+  - Error-prioritization instrument built with the experts
+  - Pre- and post-processing mechanisms
+  - Technical writing of the reports
+
+## Results
+
+<ResultsTable rotulo="Phase 1: before and after, 99 paired documents">
+
+| Metric (phase 1, 99 paired documents) | Before | After |
+|---|---|---|
+| Reasoning extraction: error rate | 80.2% | **12.8%** |
+| Argument extraction: completeness | 54.1% | **83.7%** |
+
+</ResultsTable>
+
+<BeforeAfterBar
+  titulo="Reasoning extraction: error rate"
+  unidade="%"
+  barras={[
+    { rotulo: 'Before', valor: 80.2 },
+    { rotulo: 'After', valor: 12.8, destaque: true },
+  ]}
+  nota="Phase 1, 99 paired documents."
+/>
+
+- Both differences are statistically significant (Wald test, p &lt; 0.001).
+- On the open-weight production model (phase 2), the error rate per extracted
+  ground fell from 75.0% to 48.6% on the same 99 documents.
+- With prompts held fixed (phase 3), the gain from the prompts carried over
+  to new models, and the best configuration brought documents with any error
+  down from 73.1% to 25.3%.
+
+## Lessons
+
+- **Paired evaluation instead of two loose numbers:** comparing the same
+  documents removes sample variance and allows a formal test.
+- **Isolate variables:** fixing prompts and documents is the only way to know
+  whether the model or the prompt caused the improvement.
+- **The verifier flags, a human decides:** nothing is discarded
+  automatically.

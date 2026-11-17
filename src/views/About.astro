@@ -1,0 +1,190 @@
+---
+// About/Sobre nos dois idiomas. Rotas: pages/about.astro e pages/pt/about.astro.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StackChips from '../components/StackChips.astro';
+import { apresentacao, papeisAtuais, trajetoria, habilidades } from '../data/sobre';
+import { contatos } from '../data/contato';
+import { caminho, t, type Idioma } from '../lib/i18n';
+
+interface Props {
+  idioma: Idioma;
+}
+
+const { idioma } = Astro.props;
+const tx = t(idioma);
+---
+<BaseLayout titulo={tx.sobreTitulo} descricao={tx.sobreDescricao}>
+  <article class="container pagina">
+    <header class="topo">
+      <p class="kicker">{tx.sobreTitulo}</p>
+      <h1>{tx.sobreH1}</h1>
+      <p class="lead">{apresentacao[idioma]}</p>
+      <ul class="links">
+        {contatos.map((c) => <li><a class="text-link" href={c.href} rel={c.externo ? 'me noopener' : undefined}>{c.rotulo[idioma]} <span aria-hidden="true">{c.externo ? '↗' : '→'}</span></a></li>)}
+        <li><a class="text-link" href={caminho(idioma, '/#publications')}>{tx.pubsSubtitulo} <span aria-hidden="true">→</span></a></li>
+      </ul>
+    </header>
+
+    <section aria-labelledby="papeis">
+      <h2 id="papeis" class="kicker">{tx.sobrePapeis}</h2>
+      <div class="corpo">
+      <div class="tabela-wrap" role="region" aria-labelledby="papeis" tabindex="0">
+        <table>
+          <thead>
+            <tr><th scope="col">{tx.colPapel}</th><th scope="col">{tx.colOrganizacao}</th><th scope="col">{tx.colDesde}</th><th scope="col">{tx.colModalidade}</th></tr>
+          </thead>
+          <tbody>
+            {papeisAtuais[idioma].map((p) => (
+              <tr>
+                <td>{p.papel}</td>
+                <td>{p.organizacao}</td>
+                <td class="num">{p.desde}</td>
+                <td>{p.modalidade ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="trajetoria">
+      <h2 id="trajetoria" class="kicker">{tx.sobreTrajetoria}</h2>
+      <ol class="linha-tempo corpo">
+        {trajetoria[idioma].map((t) => (
+          <li>
+            <span class="periodo">{t.periodo}</span>
+            <p>{t.texto}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section aria-labelledby="habilidades">
+      <h2 id="habilidades" class="kicker">{tx.sobreHabilidades}</h2>
+      <div class="corpo">
+      {habilidades[idioma].map((h) => (
+        <div class="grupo">
+          <h3>{h.grupo}</h3>
+          <StackChips itens={h.itens} />
+        </div>
+      ))}
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .pagina {
+    padding-block: clamp(3rem, 7vw, 6rem) var(--section-pad);
+  }
+  .topo {
+    padding-bottom: var(--space-5);
+  }
+  .topo .kicker {
+    margin-bottom: var(--space-4);
+  }
+  h1 {
+    max-width: 16ch;
+    font-size: clamp(2.4rem, 5.6vw, 5rem);
+    line-height: 1;
+    margin-bottom: var(--space-4);
+  }
+  .lead {
+    max-width: 46rem;
+  }
+  .links {
+    list-style: none;
+    padding: var(--space-3) 0 0;
+    margin: var(--space-4) 0 0;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-4);
+  }
+  section {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.35fr) minmax(0, 1.65fr);
+    gap: 2rem;
+    padding-block: var(--space-5);
+    border-top: 1px solid var(--rule);
+  }
+  section h2 {
+    margin: 0;
+    padding-top: 0.2rem;
+  }
+  .corpo {
+    min-width: 0;
+    max-width: 52rem;
+  }
+  @media (max-width: 800px) {
+    section {
+      grid-template-columns: 1fr;
+      gap: var(--space-3);
+    }
+  }
+  .tabela-wrap {
+    overflow-x: auto;
+    border-top: 2px solid var(--fg);
+  }
+  table {
+    width: 100%;
+    font-size: 1rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.7rem var(--space-3) 0.7rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  th {
+    color: var(--fg-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .num {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .linha-tempo {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .linha-tempo li {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .linha-tempo li:first-child {
+    padding-top: 0;
+  }
+  .periodo {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .linha-tempo p {
+    margin: 0;
+  }
+  @media (max-width: 479px) {
+    .linha-tempo li {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+  }
+  .grupo + .grupo {
+    margin-top: var(--space-4);
+  }
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 var(--space-2);
+  }
+</style>

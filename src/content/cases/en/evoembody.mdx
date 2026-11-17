@@ -1,0 +1,104 @@
+---
+titulo: "EvoEmbody: agents that rewrite their own code, with small open-weight models"
+titulo_curto: "EvoEmbody"
+resumo: "A framework in which meta-agents diagnose failures and rewrite the code of a task agent, with no fine-tuning and only models of up to 31B. The 4B agent went from 56% to 93% success on tasks it had never seen."
+organizacao: CEIA / HUG Labs
+papel: Co-author (3rd author) · research lead of the agent-evolution front
+periodo: "2026"
+camadas: [orquestracao, resultado-mensuravel]
+links:
+  venue: "NeurIPS 2026 Workshop — Self-Evolving Diversity-Driven Search for Robust AI Systems"
+status_publicacao: pronto
+ordem: 3
+frase_destaque: "A 4B-parameter agent went from 56% to 93% success on unseen tasks, with no fine-tuning, because another agent rewrote its code."
+stack:
+  - Qwen3.8-27B
+  - Qwen3.5-4B
+  - Gemma-4-31B
+  - Gemma-4-26B-A4B
+  - vLLM on a 180 GB GPU
+  - AWS Bedrock
+  - ALFWorld
+  - ReAct + chain-of-thought scaffold
+  - Paired bootstrap (n = 5000)
+---
+
+import PipelineDiagram from '../../../components/PipelineDiagram.astro';
+import ResultsTable from '../../../components/ResultsTable.astro';
+import BeforeAfterBar from '../../../components/BeforeAfterBar.astro';
+
+## Context and problem
+
+Self-improving agents (such as the Darwin Gödel Machine) usually depend on
+large proprietary models. In long embodied tasks they also run into two
+problems: the context overflows when reading execution logs, and changes are
+validated on the same tasks where the failures were found, which inflates the
+result.
+
+## What was built
+
+<PipelineDiagram
+  rotulo="One cycle of the evolutionary loop"
+  etapas={[
+    'Parent agent',
+    'Problem Understanding',
+    'Solution Proposer',
+    'Implementation',
+    'Child agent',
+    'Validation levels',
+  ]}
+/>
+
+- **Evolutionary loop:** in each cycle, a parent agent is chosen by
+  probability, weighting score, number of children, step efficiency, and
+  validation level. A meta-agent expands it into 3 roles:
+  1. *Problem Understanding*: reads the failure logs and the code and produces
+     a diagnosis;
+  2. *Solution Proposer*: proposes a modular change without seeing the traces;
+  3. *Implementation*: edits the files and produces the child agent.
+- **Context management:** recursive on-demand retrieval, inspired by
+  Recursive Language Models. The meta-agent queries chunks of the logs instead
+  of receiving them whole, and works with an 8k-token prompt.
+- **Disjoint splits:** failures are mined on the training set (3,553 tasks),
+  selection happens on validation (140 tasks, in levels of 5/30/60/120/140),
+  and the test set (134 out-of-distribution tasks) is evaluated only once, on
+  the final agent.
+- **Pruning:** a child only moves up a level if it reaches at least 95% of its
+  parent's score.
+- **Budget:** 50M tokens per run.
+
+## My contribution
+
+- Took part in the discussions that motivated the idea and the experiments
+- Helped write the paper
+- Supported the project's research coordination
+
+## Results
+
+ALFWorld, out-of-distribution test set, 134 tasks.
+
+<ResultsTable rotulo="EvoEmbody: initial and best-agent success on the out-of-distribution test set">
+
+| Meta-agent / task agent | Initial | Best agent | Gain (95% CI) |
+|---|---|---|---|
+| Qwen3.8-27B / Qwen3.5-4B | 56.0% | **93.3%** | +37.3 pp [29.1; 45.5] |
+| Gemma-4-31B / Gemma-4-26B-A4B | 64.9% | **79.1%** | +14.2 pp [5.2; 23.1] |
+
+</ResultsTable>
+
+<BeforeAfterBar
+  titulo="Success rate of the 4B agent (Qwen3.5-4B)"
+  unidade="%"
+  barras={[
+    { rotulo: 'Initial', valor: 56.0, texto: '56.0%' },
+    { rotulo: 'Best agent', valor: 93.3, destaque: true },
+  ]}
+  nota="ALFWorld, out-of-distribution test set, 134 tasks."
+/>
+
+- Mining failures on training, separate from validation, gives **93.3% versus
+  77.6%** when failures and selection come from the same pool. This validates
+  the protocol.
+- The meta-agents solved real bottlenecks of the agent on their own:
+  inventory tracking (validation from 50.0% to 66.7%), state-conditioned
+  matching (66.7% to 86.7%), and spatial coordination (70.0% to 83.3%).

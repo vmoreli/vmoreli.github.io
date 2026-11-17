@@ -1,0 +1,46 @@
+---
+titulo: "Um serviço de avaliação para agentes LLM"
+titulo_curto: "Serviço de avaliação de agentes"
+resumo: "Por iniciativa própria, propus e estou construindo um serviço compartilhado para auditar o risco de agentes LLM antes que cheguem a grandes clientes e encontrar o modelo viável mais barato."
+organizacao: HUG Labs
+papel: Proponente e desenvolvedor
+periodo: out/2026 – presente (em andamento)
+camadas: [construir-com-ia, orquestracao]
+formato: case curto
+status_publicacao: pronto
+ordem: 4
+stack:
+  - LangGraph
+  - DeepEval
+  - Python
+  - Claude Code (skills próprias)
+---
+
+## Contexto
+
+A empresa desenvolve produtos agênticos sobre uma base de serviços
+compartilhados. Cada novo agente precisa ter o risco checado antes de chegar
+a um cliente, e a escolha do modelo define o custo dele.
+
+## O que estou fazendo
+
+- Levantei o problema e a literatura (avaliação de agentes, LLM-as-a-judge,
+  extração de casos de teste a partir de traces) e desenhei o serviço como
+  mais um serviço compartilhado da empresa.
+- **Harness de avaliação:** um processo guiado que lê o código de um agente
+  LangGraph, entende o escopo e as ferramentas dele e constrói casos de teste
+  junto com o dev. O foco de risco é alucinação, respostas inesperadas e
+  violação de regras específicas de cada cliente.
+- Restrições de projeto: custo-alvo de US$ 3–5 por execução, humano no loop
+  com intervenção mínima e relatório interno.
+- Runner próprio com DeepEval. O piloto é um agente ReAct com ferramentas
+  somente leitura.
+- **Construção com IA:** o plano entra no meu pipeline de skills do Claude
+  Code (spec → implementação → teste → review), e eu reviso cada etapa.
+  Etapa 0 (contrato e ADRs) concluída.
+
+## Por que está aqui
+
+Mostra iniciativa (propor o serviço por conta própria), uma visão de produto
+(risco antes do cliente, custo do modelo) e um jeito de construir com IA
+mantendo controle humano.

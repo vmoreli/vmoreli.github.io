@@ -1,0 +1,29 @@
+---
+import { CAMADAS, type Camada } from '../data/camadas';
+import { idiomaDe } from '../lib/i18n';
+
+interface Props {
+  camada: Camada;
+}
+
+const { camada } = Astro.props;
+const idioma = idiomaDe(Astro.url);
+---
+
+<span class="tag">{CAMADAS[camada].rotulo[idioma]}</span>
+
+<style>
+  .tag {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    border: 1px solid var(--rule);
+    padding: 0.28rem 0.5rem;
+    white-space: nowrap;
+  }
+</style>

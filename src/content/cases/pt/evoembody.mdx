@@ -1,0 +1,104 @@
+---
+titulo: "EvoEmbody: agentes que reescrevem o próprio código, com modelos pequenos e open-weight"
+titulo_curto: "EvoEmbody"
+resumo: "Um framework em que meta-agentes diagnosticam falhas e reescrevem o código de um agente de tarefa, sem fine-tuning e só com modelos ≤31B. O agente de 4B foi de 56% para 93% de sucesso em tarefas que nunca tinha visto."
+organizacao: CEIA / HUG Labs
+papel: Coautor (3º autor) · research lead da frente de agent-evolution
+periodo: "2026"
+camadas: [orquestracao, resultado-mensuravel]
+links:
+  venue: "NeurIPS 2026 Workshop — Self-Evolving Diversity-Driven Search for Robust AI Systems"
+status_publicacao: pronto
+ordem: 3
+frase_destaque: "Um agente de 4B parâmetros foi de 56% para 93% de sucesso em tarefas inéditas, sem fine-tuning, porque outro agente reescreveu o código dele."
+stack:
+  - Qwen3.8-27B
+  - Qwen3.5-4B
+  - Gemma-4-31B
+  - Gemma-4-26B-A4B
+  - vLLM em GPU de 180 GB
+  - AWS Bedrock
+  - ALFWorld
+  - Scaffold ReAct + chain-of-thought
+  - Bootstrap pareado (n = 5000)
+---
+
+import PipelineDiagram from '../../../components/PipelineDiagram.astro';
+import ResultsTable from '../../../components/ResultsTable.astro';
+import BeforeAfterBar from '../../../components/BeforeAfterBar.astro';
+
+## Contexto e problema
+
+Agentes que melhoram a si mesmos (como a Darwin Gödel Machine) costumam
+depender de modelos proprietários grandes. Em tarefas embodied longas, eles
+também esbarram em dois problemas: o contexto estoura ao ler os logs de
+execução, e as mudanças são validadas nas mesmas tarefas em que as falhas
+foram encontradas, o que infla o resultado.
+
+## O que foi feito
+
+<PipelineDiagram
+  rotulo="Um ciclo do loop evolutivo"
+  etapas={[
+    'Agente-pai',
+    'Problem Understanding',
+    'Solution Proposer',
+    'Implementation',
+    'Agente-filho',
+    'Níveis de validação',
+  ]}
+/>
+
+- **Loop evolutivo:** a cada ciclo, um agente-pai é escolhido por
+  probabilidade, ponderando score, número de filhos, eficiência de passos e
+  nível de validação. Um meta-agente o expande em 3 papéis:
+  1. *Problem Understanding*: lê os logs da falha e o código e produz um
+     diagnóstico;
+  2. *Solution Proposer*: propõe uma modificação modular sem ver os traces;
+  3. *Implementation*: edita os arquivos e gera o agente-filho.
+- **Gestão de contexto:** recuperação recursiva sob demanda, inspirada em
+  Recursive Language Models. O meta-agente consulta pedaços dos logs em vez
+  de recebê-los inteiros e opera com 8k tokens de prompt.
+- **Splits disjuntos:** as falhas são mineradas no treino (3.553 tarefas), a
+  seleção é feita na validação (140 tarefas, em níveis de 5/30/60/120/140) e
+  o teste (134 tarefas fora da distribuição) é avaliado uma única vez, no
+  agente final.
+- **Poda:** um filho só avança de nível se atingir ao menos 95% do score do
+  pai.
+- **Orçamento:** 50M tokens por execução.
+
+## Minha contribuição
+
+- Participação nas discussões que motivaram a ideia e os experimentos
+- Apoio na escrita do paper
+- Apoio à coordenação da pesquisa ao longo do projeto
+
+## Resultados
+
+ALFWorld, teste fora da distribuição, 134 tarefas.
+
+<ResultsTable rotulo="EvoEmbody: sucesso inicial e do melhor agente no teste fora da distribuição">
+
+| Meta-agente / agente de tarefa | Inicial | Melhor agente | Ganho (IC 95%) |
+|---|---|---|---|
+| Qwen3.8-27B / Qwen3.5-4B | 56,0% | **93,3%** | +37,3 pp [29,1; 45,5] |
+| Gemma-4-31B / Gemma-4-26B-A4B | 64,9% | **79,1%** | +14,2 pp [5,2; 23,1] |
+
+</ResultsTable>
+
+<BeforeAfterBar
+  titulo="Taxa de sucesso do agente de 4B (Qwen3.5-4B)"
+  unidade="%"
+  barras={[
+    { rotulo: 'Inicial', valor: 56.0, texto: '56,0%' },
+    { rotulo: 'Melhor agente', valor: 93.3, destaque: true },
+  ]}
+  nota="ALFWorld, teste fora da distribuição, 134 tarefas."
+/>
+
+- Minerar falhas no treino, separado da validação, dá **93,3% contra 77,6%**
+  quando falhas e seleção vêm do mesmo pool. Isso valida o protocolo.
+- Os meta-agentes resolveram sozinhos gargalos reais do agente: rastreamento
+  de inventário (validação de 50,0% para 66,7%), correspondência
+  condicionada ao estado (66,7% para 86,7%) e coordenação espacial (70,0%
+  para 83,3%).

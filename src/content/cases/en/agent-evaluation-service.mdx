@@ -1,0 +1,46 @@
+---
+titulo: "An evaluation service for LLM agents"
+titulo_curto: "Agent evaluation service"
+resumo: "On my own initiative, I proposed and am building a shared service to audit the risk of LLM agents before they reach large clients and to find the cheapest viable model."
+organizacao: HUG Labs
+papel: Proposer and developer
+periodo: Oct 2026 – present (in progress)
+camadas: [construir-com-ia, orquestracao]
+formato: case curto
+status_publicacao: pronto
+ordem: 4
+stack:
+  - LangGraph
+  - DeepEval
+  - Python
+  - Claude Code (custom skills)
+---
+
+## Context
+
+The company builds agentic products on top of a base of shared services.
+Each new agent needs to be checked for risk before it
+reaches a client, and the choice of model drives its cost.
+
+## What I am doing
+
+- I scoped the problem and the literature (agent evaluation, LLM-as-a-judge,
+  extracting test cases from traces) and designed the service as one more of
+  the company's shared services.
+- **Evaluation harness:** a guided process that reads the code of a LangGraph
+  agent, understands its scope and tools, and builds test cases together with
+  the developer. The risk focus is hallucination, unexpected answers, and
+  violations of client-specific rules.
+- Design constraints: a target cost of US$ 3–5 per run, human in the loop
+  with minimal intervention, and an internal report.
+- Custom runner with DeepEval. The pilot is a ReAct agent with read-only
+  tools.
+- **Building with AI:** the plan goes into my Claude Code skills pipeline
+  (spec → implementation → test → review), and I review each step. Step 0
+  (contract and ADRs) is done.
+
+## Why it is here
+
+It shows initiative (proposing the service myself), a product view (risk
+before the client, model cost), and a way of building with AI while keeping
+human control.

@@ -1,0 +1,335 @@
+---
+// Home nos dois idiomas. As rotas (pages/index.astro e pages/pt/index.astro)
+// só escolhem o idioma.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Retrato from '../components/Retrato.astro';
+import CaseCard from '../components/CaseCard.astro';
+import { perfil, trabalhoAtual } from '../data/perfil';
+import { apresentacao, publicacoes } from '../data/sobre';
+import { contatos } from '../data/contato';
+import { getCasesVisiveis, slugDe } from '../lib/cases';
+import { caminho, t, type Idioma } from '../lib/i18n';
+
+interface Props {
+  idioma: Idioma;
+}
+
+const { idioma } = Astro.props;
+const tx = t(idioma);
+const cases = await getCasesVisiveis(idioma);
+const visiveis = new Set(cases.map(slugDe));
+const doisDigitos = (i: number) => String(i + 1).padStart(2, '0');
+
+const pubs = publicacoes.map((p) => {
+  const doCaso = p.caso && visiveis.has(p.caso) ? caminho(idioma, `/cases/${p.caso}/`) : undefined;
+  return {
+    titulo: typeof p.titulo === 'string' ? p.titulo : p.titulo[idioma],
+    area: p.area[idioma],
+    venue: p.venue[idioma],
+    nota: p.nota?.[idioma],
+    autores: p.autores,
+    link: p.link,
+    href: p.link?.href ?? doCaso,
+    externo: Boolean(p.link),
+  };
+});
+---
+<BaseLayout titulo="Victor Moreli" descricao={perfil.posicionamento[idioma]}>
+  <section class="hero" aria-labelledby="frase">
+    <div class="container hero-grid">
+      <div class="hero-texto">
+      <p class="kicker">{perfil.cargo[idioma]} · {tx.cargoSufixo}</p>
+      <h1 id="frase">{perfil.frase[idioma]}</h1>
+      <p class="lead">{apresentacao[idioma]}</p>
+      <ul class="links">
+        {contatos.map((c) => (
+          <li><a class="text-link" href={c.href} rel={c.externo ? 'me noopener' : undefined}>{c.rotulo[idioma]} <span aria-hidden="true">{c.externo ? '↗' : '→'}</span></a></li>
+        ))}
+        <li><a class="text-link" href={caminho(idioma, '/about/')}>{tx.navSobre} <span aria-hidden="true">→</span></a></li>
+      </ul>
+      </div>
+      <Retrato legenda={perfil.nome} local={tx.local} alt={tx.retratoAlt} />
+    </div>
+  </section>
+
+  <section class="section" id="current" aria-labelledby="current-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="kicker">{tx.atualKicker}</p>
+        <h2 id="current-title">{tx.atualTitulo}</h2>
+      </header>
+      <p class="lead intro">{perfil.atualIntro[idioma]}</p>
+      <ol class="grade dupla">
+        {trabalhoAtual[idioma].map((t, i) => (
+          <li class="frente">
+            <span class="kicker indice" aria-hidden="true">{doisDigitos(i)}</span>
+            <h3>{t.titulo}</h3>
+            <p class="descricao">{t.descricao}</p>
+            <p class="onde">{t.onde}</p>
+            {t.link && (
+              <a class="text-link" href={t.link.href} rel="noopener">{t.link.rotulo} <span aria-hidden="true">↗</span></a>
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="projects" aria-labelledby="projects-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="kicker">{tx.projetosKicker}</p>
+        <h2 id="projects-title">{tx.projetosTitulo}</h2>
+      </header>
+
+      {cases.length > 0 && (
+        <div class="bloco" aria-labelledby="cases-title">
+          <h3 id="cases-title" class="kicker subtitulo">{tx.casesSubtitulo}</h3>
+          <p class="lead">{tx.casesLead}</p>
+          <ul class="grade tripla">
+            {cases.map((c) => <li><CaseCard entry={c} /></li>)}
+          </ul>
+        </div>
+      )}
+
+      <div class="bloco" id="publications" aria-labelledby="pubs-title">
+        <h3 id="pubs-title" class="kicker subtitulo">{tx.pubsSubtitulo}</h3>
+        <ul class="pubs">
+          {pubs.map((p) => {
+            const Tag = p.href ? 'a' : 'div';
+            return (
+              <li>
+                <Tag class="pub" href={p.href} rel={p.externo ? 'noopener' : undefined}>
+                  <span class="pub-texto">
+                    <span class="kicker">{p.area} · {p.venue}</span>
+                    <strong>{p.titulo}</strong>
+                    {p.autores && <span class="autores">{p.autores}{p.nota && ` ${p.nota}`}</span>}
+                  </span>
+                  {p.href && (
+                    <span class="seta">
+                      <span aria-hidden="true">{p.externo ? '↗' : '→'}</span>
+                      <span class="visually-hidden">{p.externo ? `(${p.link?.rotulo})` : tx.pubCaso}</span>
+                    </span>
+                  )}
+                </Tag>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section contato" id="contact" aria-labelledby="contact-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="kicker">{tx.contatoKicker}</p>
+        <h2 id="contact-title">{tx.contatoTitulo}</h2>
+      </header>
+      <ul class="lista-contato">
+        {contatos.map((c) => (
+          <li>
+            <a href={c.href} rel={c.externo ? 'me noopener' : undefined}>
+              <span class="kicker">{c.rotulo[idioma]}</span>
+              <span class="valor">{c.valor}</span>
+              <span class="seta" aria-hidden="true">{c.externo ? '↗' : '→'}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    border-bottom: 1px solid var(--rule);
+    padding-block: clamp(3.5rem, 9vw, 8rem) clamp(3rem, 6vw, 5rem);
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+    align-items: center;
+    gap: clamp(2rem, 6vw, 7rem);
+  }
+  .hero .kicker {
+    margin-bottom: var(--space-4);
+  }
+  @media (max-width: 800px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  h1 {
+    max-width: 16ch;
+    margin-bottom: var(--space-4);
+  }
+  .hero .lead {
+    max-width: 44rem;
+    margin: 0;
+  }
+  .links {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-4);
+    max-width: 44rem;
+    margin: var(--space-5) 0 0;
+    padding: var(--space-3) 0 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .intro {
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  /* Grade com fios de 1px: a grade desenha topo/esquerda, cada célula direita/base. */
+  .grade {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+  }
+  .grade > li {
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    min-width: 0;
+  }
+  .dupla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tripla {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (max-width: 1000px) {
+    .tripla { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .dupla, .tripla { grid-template-columns: 1fr; }
+  }
+
+  .frente {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: clamp(1.4rem, 3vw, 2.5rem);
+  }
+  .indice {
+    margin-bottom: var(--space-2);
+    color: var(--accent);
+  }
+  .frente h3 {
+    margin: 0;
+  }
+  .descricao {
+    margin: 0;
+    color: var(--fg-muted);
+  }
+  .onde {
+    margin: var(--space-2) 0 0;
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+  }
+  .frente .text-link {
+    align-self: flex-start;
+    min-height: 0;
+    margin-top: var(--space-2);
+    font-size: 0.72rem;
+  }
+
+  .bloco + .bloco {
+    margin-top: clamp(3rem, 6vw, 5rem);
+  }
+  .subtitulo {
+    color: var(--fg);
+    margin-bottom: var(--space-3);
+  }
+  .bloco .lead {
+    margin-bottom: var(--space-4);
+  }
+
+  .pubs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .pub {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    min-height: 96px;
+    padding-block: 1.25rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--fg);
+    text-decoration: none;
+  }
+  a.pub:hover strong {
+    color: var(--accent);
+    text-decoration: underline 1px;
+    text-underline-offset: 0.2em;
+  }
+  .pub-texto {
+    display: grid;
+    gap: 0.45rem;
+  }
+  .pub strong {
+    max-width: 60rem;
+    font: 500 clamp(1.1rem, 1.9vw, 1.45rem) / 1.3 var(--font-serif);
+    letter-spacing: -0.01em;
+  }
+  .autores {
+    max-width: 60rem;
+    font-size: 0.9rem;
+    color: var(--fg-muted);
+  }
+  .seta {
+    flex: none;
+    font-size: 1.25rem;
+    color: var(--accent);
+  }
+
+  .contato {
+    border-bottom: 0;
+  }
+  .lista-contato {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .lista-contato a {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.35fr) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2rem;
+    min-height: 80px;
+    padding-inline: var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    color: var(--fg);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+  .lista-contato a:hover {
+    background: var(--bg-subtle);
+  }
+  .lista-contato .valor {
+    font-family: var(--font-serif);
+    font-size: clamp(1.15rem, 2.2vw, 1.75rem);
+    letter-spacing: -0.015em;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 560px) {
+    .lista-contato a {
+      grid-template-columns: 1fr auto;
+      gap: 0.25rem 1rem;
+      padding-block: 1rem;
+    }
+    .lista-contato .kicker {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

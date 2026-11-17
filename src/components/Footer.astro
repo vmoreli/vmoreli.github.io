@@ -1,0 +1,70 @@
+---
+import { perfil } from '../data/perfil';
+import { contatos } from '../data/contato';
+import { idiomaDe } from '../lib/i18n';
+
+const ano = new Date().getFullYear();
+const idioma = idiomaDe(Astro.url);
+---
+<footer class="site-footer">
+  <div class="container grade">
+    <p class="nome">{perfil.nome}</p>
+    <ul class="links">
+      {contatos.map((c) => (
+        <li><a href={c.href} rel={c.externo ? 'me noopener' : undefined}>{c.rotulo[idioma]} <span aria-hidden="true">{c.externo ? '↗' : '→'}</span></a></li>
+      ))}
+    </ul>
+    <p class="meta">© {ano}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--footer-bg);
+    color: var(--footer-fg);
+    padding-block: 2.5rem;
+    font-family: var(--font-sans);
+  }
+  .grade {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+  }
+  .nome {
+    margin: 0 auto 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .links a,
+  .meta {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .links a {
+    color: var(--footer-fg);
+    text-decoration: none;
+  }
+  .links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+  .meta {
+    margin: 0;
+    color: var(--footer-muted);
+  }
+  .site-footer :focus-visible {
+    outline-color: var(--footer-fg);
+  }
+</style>

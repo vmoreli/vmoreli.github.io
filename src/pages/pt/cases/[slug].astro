@@ -1,0 +1,20 @@
+---
+import { render } from 'astro:content';
+import CaseLayout from '../../../layouts/CaseLayout.astro';
+import type { CaseEntry } from '../../../lib/cases';
+import { caminhosDosCases } from '../../../lib/rotas-cases';
+
+export const getStaticPaths = () => caminhosDosCases('pt');
+
+interface Props {
+  entry: CaseEntry;
+  anterior?: CaseEntry;
+  proximo?: CaseEntry;
+}
+
+const { entry, anterior, proximo } = Astro.props;
+const { Content } = await render(entry);
+---
+<CaseLayout entry={entry} anterior={anterior} proximo={proximo}>
+  <Content />
+</CaseLayout>

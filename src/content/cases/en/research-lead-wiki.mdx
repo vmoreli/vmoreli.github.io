@@ -1,0 +1,46 @@
+---
+titulo: "A self-writing wiki to coordinate 3 research fronts"
+titulo_curto: "Research-lead wiki"
+resumo: "An “LLM Wiki” that imports ClickUp cards and meeting transcripts every week, synthesizes the state of each research front, and drafts the next sprint's cards for my approval."
+organizacao: HUG Labs / CEIA
+papel: Research lead (personal tool)
+periodo: Oct 2026 – present
+camadas: [automacao-integracao, construir-com-ia]
+formato: case curto
+status_publicacao: pronto
+ordem: 5
+stack:
+  - Claude Code
+  - Python
+  - ClickUp API
+  - Gmail
+  - Markdown
+  - Git
+---
+
+## Context
+
+As a research lead, I coordinate 3 fronts at the same time (deep research,
+agent evolution, and LLM evaluation). The weekly cycle has sprint cards,
+1:1s on Thursday, and an all-hands with the head on Friday. Transcripts
+arrive by email. Context was scattered across ClickUp, Gmail, and my memory.
+
+## What I built
+
+- **Integration with external systems:** one script exports the sprint cards
+  through the ClickUp API and classifies them by front with canonical tags;
+  another saves the Meet transcripts that arrive by email.
+- **Synthesis layer (LLM Wiki pattern):** Claude maintains markdown pages per
+  front with the goal, current state, next steps, and a summary of the
+  period. The raw sources (`raw/`) are never edited; only the wiki is.
+- **Monday routine:** imports the sprint that just closed and the week's
+  meetings, updates the wiki, and proposes the cards for the next sprint.
+- **Human in the loop:** the routine only produces drafts, and nothing is
+  published to ClickUp without my approval.
+- Runs on the Claude Pro subscription, with no extra API cost.
+
+## Why it is here
+
+It is AI integrated with external systems (ClickUp, Gmail, and Google Meet)
+solving a real coordination problem, built in code rather than with a no-code
+tool.

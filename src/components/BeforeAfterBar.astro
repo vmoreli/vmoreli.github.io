@@ -1,0 +1,147 @@
+---
+// Barras horizontais geradas no build (sem JS no cliente), em HTML/CSS.
+// Cor por grupo: `destaque` = série 1 (depois / resultado, azul);
+// demais = série 2 (antes / referência, laranja). O valor de cada barra fica
+// sempre em texto ao lado, então a cor nunca carrega a informação sozinha.
+// Escala sempre a partir de zero; a maior barra ocupa a largura toda.
+import { formatNumero } from '../lib/format';
+import { idiomaDe } from '../lib/i18n';
+
+interface Barra {
+  rotulo: string;
+  valor: number;
+  /** Sobrescreve o valor exibido, ex.: "~US$ 500". */
+  texto?: string;
+  destaque?: boolean;
+}
+
+interface Props {
+  titulo: string;
+  unidade?: string;
+  barras: Barra[];
+  nota?: string;
+}
+
+const { titulo, unidade, barras, nota } = Astro.props;
+const idioma = idiomaDe(Astro.url);
+
+// Mantém as casas decimais exatamente como escritas na fonte (80.2 → "80.2" em inglês, "80,2" em português).
+const casasDe = (v: number) => (String(v).split('.')[1] ?? '').length;
+
+const sufixo = (u?: string) => (!u ? '' : u === '%' ? '%' : ` ${u}`);
+
+const max = Math.max(...barras.map((b) => b.valor), 0) || 1;
+
+const linhas = barras.map((b) => ({
+  ...b,
+  exibido: b.texto ?? `${formatNumero(b.valor, casasDe(b.valor), idioma)}${sufixo(unidade)}`,
+  largura: Math.max((b.valor / max) * 100, 0),
+}));
+
+const ariaLabel =
+  `${titulo}. ` +
+  linhas.map((l) => `${l.rotulo}: ${l.exibido}`).join('; ') +
+  '.' +
+  (nota ? ` ${nota}` : '');
+---
+
+<figure class="barras" role="img" aria-label={ariaLabel}>
+  <div class="linhas" aria-hidden="true">
+    {
+      linhas.map((l) => (
+        <div class:list={['linha', { destaque: l.destaque }]}>
+          <span class="rotulo">{l.rotulo}</span>
+          <span class="trilho">
+            <span class="barra" style={`width: ${l.largura}%`} />
+          </span>
+          <span class="valor">{l.exibido}</span>
+        </div>
+      ))
+    }
+  </div>
+  <figcaption>
+    <span class="titulo">{titulo}</span>
+    {nota && <span class="nota">{nota}</span>}
+  </figcaption>
+</figure>
+
+<style>
+  .barras {
+    margin: var(--space-5) 0;
+    font-family: var(--font-sans);
+  }
+  .linhas {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .linha {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'rotulo rotulo'
+      'trilho valor';
+    column-gap: var(--space-3);
+    row-gap: var(--space-1);
+    align-items: center;
+  }
+  .rotulo {
+    grid-area: rotulo;
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+  }
+  .destaque .rotulo {
+    color: var(--fg);
+  }
+  /* Trilho sem preenchimento: só a linha de base, para a barra não competir com fundo. */
+  .trilho {
+    grid-area: trilho;
+    display: block;
+    height: 14px;
+    border-left: 1px solid var(--fg-muted);
+  }
+  .barra {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    background: var(--series-2);
+    /* Ponta arredondada só do lado do valor; base reta, ancorada no eixo. */
+    border-radius: 0 4px 4px 0;
+  }
+  .destaque .barra {
+    background: var(--series-1);
+  }
+  .valor {
+    grid-area: valor;
+    min-width: 4.5rem;
+    text-align: right;
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--fg);
+  }
+  .destaque .valor {
+    font-weight: 700;
+  }
+  figcaption {
+    margin-top: var(--space-3);
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+  }
+  .titulo {
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .nota::before {
+    content: ' · ';
+  }
+  /* Modo de alto contraste: cores do sistema somem; a barra vira contorno. */
+  @media (forced-colors: active) {
+    .barra {
+      background: CanvasText;
+    }
+    .destaque .barra {
+      background: Highlight;
+    }
+  }
+</style>

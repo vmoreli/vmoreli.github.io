@@ -1,0 +1,18 @@
+---
+// Chip discreto em fonte mono (stack, ferramentas).
+---
+
+<span class="chip"><slot /></span>
+
+<style>
+  .chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--fg);
+    background: var(--bg-subtle);
+    border: 1px solid var(--rule);
+    padding: 0.25rem 0.55rem;
+  }
+</style>

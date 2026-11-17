@@ -1,0 +1,244 @@
+---
+import { caminho, equivalente, idiomaDe, IDIOMAS, t } from '../lib/i18n';
+
+const atual = Astro.url.pathname;
+const idioma = idiomaDe(Astro.url);
+const tx = t(idioma);
+const itens = [
+  { rotulo: tx.navAtual, href: caminho(idioma, '/#current') },
+  { rotulo: tx.navProjetos, href: caminho(idioma, '/#projects') },
+  { rotulo: tx.navSobre, href: caminho(idioma, '/about/') },
+  { rotulo: tx.navContato, href: caminho(idioma, '/#contact') },
+];
+// Seletor de idioma: links para a mesma página no outro idioma (funciona sem JS).
+const idiomas = IDIOMAS.map((i) => ({
+  codigo: i,
+  sigla: i.toUpperCase(),
+  nome: tx.nomeIdioma[i],
+  href: equivalente(Astro.url, i),
+  ativo: i === idioma,
+}));
+---
+<header class="site-header">
+  <div class="container inner">
+    <a class="marca" href={caminho(idioma, '/')} aria-label={tx.inicio}>
+      <span class="selo" aria-hidden="true">VM</span>
+      <span class="nome">Victor Moreli</span>
+    </a>
+    <nav class="principal" aria-label={tx.navPrincipal}>
+      <ul>
+        {itens.map((i) => (
+          <li>
+            <a href={i.href} aria-current={atual === i.href ? 'page' : undefined}>{i.rotulo}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    <ul class="idiomas" aria-label={tx.seletorIdioma}>
+      {idiomas.map((i) => (
+        <li>
+          <a
+            href={i.href}
+            hreflang={i.codigo === 'pt' ? 'pt-BR' : 'en'}
+            lang={i.codigo === 'pt' ? 'pt-BR' : 'en'}
+            aria-current={i.ativo ? 'true' : undefined}
+          >
+            <span aria-hidden="true">{i.sigla}</span>
+            <span class="visually-hidden">{i.nome}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <button class="tema" type="button" aria-pressed="false" hidden>
+      <svg class="icone lua" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+      </svg>
+      <svg class="icone sol" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      <span class="visually-hidden">{tx.modoEscuro}</span>
+    </button>
+  </div>
+</header>
+
+<script>
+  // Botão de tema: só aparece com JS. aria-pressed = modo escuro ativo.
+  const botao = document.querySelector<HTMLButtonElement>('.site-header .tema');
+  const raiz = document.documentElement;
+  const sistemaEscuro = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const temaAtual = () =>
+    raiz.dataset.theme === 'dark' || (raiz.dataset.theme !== 'light' && sistemaEscuro.matches);
+
+  // Usa a reflexão ARIA (ariaPressed): o método genérico do DOM para isso tem um
+  // termo da lista proibida no nome e quebraria check:conf no dist/.
+  function sincronizar() {
+    if (botao) botao.ariaPressed = String(temaAtual());
+  }
+
+  if (botao) {
+    botao.hidden = false;
+    sincronizar();
+    sistemaEscuro.addEventListener('change', sincronizar);
+    botao.addEventListener('click', () => {
+      const novo = temaAtual() ? 'light' : 'dark';
+      raiz.dataset.theme = novo;
+      try {
+        localStorage.setItem('tema', novo);
+      } catch {}
+      sincronizar();
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-family: var(--font-sans);
+  }
+  .inner {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+    min-height: 72px; /* altura da linha principal; --header-h mede o cabeçalho inteiro */
+  }
+  .marca {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-right: auto;
+    color: var(--fg);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+  .selo {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+  }
+  .principal ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.5rem, 1.6vw, 1.6rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  /* Seletor EN | PT: duas caixas coladas, a ativa preenchida (como no botão de tema). */
+  .idiomas {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .idiomas a {
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    height: 44px;
+    border: 1px solid var(--rule);
+    color: var(--fg-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+  }
+  .idiomas li + li a {
+    border-left: 0;
+  }
+  .idiomas a:hover {
+    color: var(--fg);
+    border-color: var(--fg);
+  }
+  .idiomas a[aria-current='true'] {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+  nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--fg);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  nav a:hover {
+    color: var(--accent);
+    text-decoration: underline 2px;
+    text-underline-offset: 0.4em;
+  }
+  nav a[aria-current='page'] {
+    text-decoration: underline 2px var(--accent);
+    text-underline-offset: 0.4em;
+  }
+  .tema {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: var(--fg-muted);
+    background: transparent;
+    border: 1px solid var(--rule);
+    cursor: pointer;
+  }
+  .tema[hidden] {
+    display: none;
+  }
+  .tema:hover {
+    color: var(--fg);
+    border-color: var(--fg);
+  }
+  .icone {
+    grid-area: 1 / 1;
+  }
+  /* Mostra o ícone do tema para o qual o clique leva. */
+  .tema[aria-pressed='true'] .lua,
+  .tema[aria-pressed='false'] .sol {
+    display: none;
+  }
+  /* Telas estreitas: menu numa segunda linha, de ponta a ponta. */
+  @media (max-width: 900px) {
+    .inner {
+      flex-wrap: wrap;
+      row-gap: 0;
+      padding-top: 0.5rem;
+    }
+    .principal {
+      order: 3;
+      width: 100%;
+      border-top: 1px solid var(--rule);
+    }
+    .principal ul {
+      justify-content: space-between;
+    }
+  }
+  @media (max-width: 560px) {
+    .nome {
+      display: none;
+    }
+    nav a {
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+    }
+  }
+</style>

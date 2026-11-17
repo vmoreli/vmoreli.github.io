@@ -1,0 +1,68 @@
+---
+import { getImage } from 'astro:assets';
+import retrato from '../assets/victor-moreli.jpg';
+import '../styles/global.css';
+import '../styles/prose.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { equivalente, idiomaDe, IDIOMAS, t } from '../lib/i18n';
+
+interface Props {
+  titulo: string;
+  descricao?: string;
+}
+
+const { titulo, descricao } = Astro.props;
+const nomeSite = 'Victor Moreli';
+const tituloCompleto = titulo === nomeSite ? titulo : `${titulo} · ${nomeSite}`;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+const idioma = idiomaDe(Astro.url);
+const tx = t(idioma);
+const ehErro = /\/404(\.html|\/)?$/.test(Astro.url.pathname);
+// Versões da mesma página nos dois idiomas (hreflang), exceto na página de erro.
+const alternativas = !ehErro && Astro.site
+  ? IDIOMAS.map((i) => ({ idioma: i, href: new URL(equivalente(Astro.url, i), Astro.site).href }))
+  : [];
+
+// Imagem de pré-visualização para links compartilhados (LinkedIn, WhatsApp etc.).
+const og = await getImage({ src: retrato, width: 1060, height: 1060, fit: 'cover', position: 'center', format: 'jpeg' });
+const ogImagem = Astro.site ? new URL(og.src, Astro.site).href : undefined;
+---
+<!doctype html>
+<html lang={idioma === 'pt' ? 'pt-BR' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{tituloCompleto}</title>
+    {descricao && <meta name="description" content={descricao} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    {alternativas.map((a) => <link rel="alternate" hreflang={a.idioma === 'pt' ? 'pt-BR' : 'en'} href={a.href} />)}
+    {alternativas.length > 0 && <link rel="alternate" hreflang="x-default" href={alternativas[0].href} />}
+    <meta property="og:title" content={tituloCompleto} />
+    {descricao && <meta property="og:description" content={descricao} />}
+    <meta property="og:type" content="website" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImagem && <meta property="og:image" content={ogImagem} />}
+    {ogImagem && <meta property="og:image:alt" content={tx.ogAlt} />}
+    <meta name="twitter:card" content="summary" />
+    <meta property="og:locale" content={idioma === 'pt' ? 'pt_BR' : 'en_US'} />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      // Aplica o tema salvo antes da pintura (evita piscar). Sem escolha salva: segue o sistema.
+      try {
+        var t = localStorage.getItem('tema');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">{tx.pularConteudo}</a>
+    <Header />
+    <main id="conteudo" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

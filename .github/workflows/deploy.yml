@@ -1,0 +1,40 @@
+# Publica o site no GitHub Pages a cada push na main.
+# Antes do primeiro deploy: Settings → Pages → Source: "GitHub Actions".
+# As checagens de números e confidencialidade dependem de content-src/ (fora do
+# git) e por isso rodam só localmente: rode `npm run verificar` antes do push.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: withastro/action@v3
+        with:
+          node-version: 24
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

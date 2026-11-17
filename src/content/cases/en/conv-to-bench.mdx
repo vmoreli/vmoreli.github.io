@@ -1,0 +1,142 @@
+---
+titulo: "Conv-to-Bench: LLM benchmarks generated automatically from real conversations"
+titulo_curto: "Conv-to-Bench"
+resumo: "A pipeline that turns real user–LLM conversations into verifiable benchmarks, using only open-weight models. It is about 26× cheaper to build than the main automatic reference, with equal or higher correlation with human judgment."
+organizacao: CEIA / HUG Labs
+papel: Co-first author
+periodo: 2025 – present
+camadas: [orquestracao, prompt-engineering, resultado-mensuravel]
+links:
+  arxiv: https://arxiv.org/abs/2605.26440
+  codigo: https://github.com/vmoreli/conv-to-bench
+  venue: "ICLR 2026 Workshops — DATA-FM and VerifAI-2"
+status_publicacao: pronto
+ordem: 1
+frase_destaque: "About 26× cheaper to build and 12× cheaper to evaluate than the main automatic reference, with equal or higher correlation with human judgment."
+stack:
+  - Python
+  - vLLM
+  - Apptainer
+  - HPC cluster (H100)
+  - AWS Bedrock
+  - gpt-oss-20b
+  - gpt-oss-120b
+  - GLM-4.7-Flash
+  - Qwen3.6-27B
+  - Gemma-4-31B
+  - BERTopic
+  - LaTeX
+  - TikZ
+---
+
+import PipelineDiagram from '../../../components/PipelineDiagram.astro';
+import ResultsTable from '../../../components/ResultsTable.astro';
+import BeforeAfterBar from '../../../components/BeforeAfterBar.astro';
+
+## Context and problem
+
+Reliable benchmarks depend on expensive curation. BigCodeBench, for example,
+took about a year of work from 20 authors. Meanwhile, every company that puts
+an LLM in production accumulates logs of real conversations. Those logs show
+what users actually ask for and how they correct the model over the
+conversation, but they rarely become evaluation.
+
+- Existing automatic methods (such as Arena-Hard-Auto) use only the first
+  turn, compare answers pairwise against a baseline, and depend on expensive
+  proprietary models.
+- For a company without a frontier-model budget, that rules out having its
+  own continuous evaluation.
+
+## What was built
+
+<PipelineDiagram
+  rotulo="Conv-to-Bench pipeline in three phases"
+  etapas={[
+    'Selection and filtering of real conversations',
+    'Synthesis: self-contained instruction + checklist',
+    'Item-by-item evaluation and ranking',
+  ]}
+/>
+
+A three-phase pipeline:
+
+1. **Selection and filtering:** conversations from LMSYS-Chat-1M and WildChat
+   grouped by topic (BERTopic) and filtered through a multi-stage funnel with
+   adaptive sampling that balances diversity and quality. There were 16,731
+   candidate dialogues.
+2. **Synthesis:** for each conversation, an LLM consolidates the user's
+   request, including the refinements made in later turns, into a
+   self-contained instruction, paired with a checklist of binary, verifiable
+   requirements.
+3. **Evaluation and ranking:** LLM judges check each checklist item in each
+   candidate model's answer. The final ranking is compared with reference
+   rankings.
+
+Statistical rigor: Spearman and Kendall correlations with bootstrap CIs,
+Bradley-Terry, Pair Rank Brier Score, separability, Cohen's κ and
+Krippendorff's α for inter-judge agreement, plus a verbosity-bias check.
+
+## My contribution
+
+- Co-first author (equal contribution with the first author)
+- Design and implementation of the benchmark construction pipeline
+- Statistical scoring layer (Bradley-Terry, Brier, bootstrap, Krippendorff)
+- Production experiments on an HPC cluster (4× H100, vLLM in Apptainer
+  containers) and Base vs. Refined ablations with 19 models and 3 open-weight
+  judges; the runs were split with the other co-first author (each ran part
+  of the models)
+- Writing of the methodology and experiments sections and the pipeline
+  figures, with writing support from the co-authors
+- Support from the co-authors in discussions and ideas
+
+## Results
+
+### Workshop version (published)
+
+- Spearman **ρ = 1.000** with BigCodeBench (an expert-written benchmark),
+  against 0.943 for Arena-Hard-Auto with the same judge.
+- LLM judge with **κ = 0.705** agreement with human-verified ground truth.
+- No verbosity bias in the evaluators (low correlation between answer length
+  and score).
+
+### Extended version (manuscript)
+
+<ResultsTable rotulo="Conv-to-Bench against Arena-Hard-Auto, extended version (manuscript)">
+
+| Metric | Conv-to-Bench | Arena-Hard-Auto |
+|---|---|---|
+| Spearman vs. human preferences (19 models) | **0.926–0.946** | 0.916 |
+| Brier score (calibration; lower is better) | **0.053–0.069** | 0.092 |
+| Cost to build the benchmark | **US$ 19.05** (500 instructions) | ~US$ 500 |
+| Cost to evaluate one model | **US$ 1.62** | ~US$ 20 |
+| Depends on a proprietary API | No | Yes |
+
+</ResultsTable>
+
+<BeforeAfterBar
+  titulo="Cost to build the benchmark (500 instructions)"
+  barras={[
+    { rotulo: 'Arena-Hard-Auto', valor: 500, texto: '~US$ 500' },
+    { rotulo: 'Conv-to-Bench', valor: 19.05, texto: 'US$ 19.05', destaque: true },
+  ]}
+  nota="Extended version (manuscript)."
+/>
+
+<BeforeAfterBar
+  titulo="Cost to evaluate one model"
+  barras={[
+    { rotulo: 'Arena-Hard-Auto', valor: 20, texto: '~US$ 20' },
+    { rotulo: 'Conv-to-Bench', valor: 1.62, texto: 'US$ 1.62', destaque: true },
+  ]}
+  nota="Extended version (manuscript)."
+/>
+
+Ablation: checking the checklist item by item beats pairwise comparison on
+every metric: +0.146 Spearman, +22.8 pp separability, +31.7 pp agreement, and
+−0.106 Brier.
+
+## Why this matters outside academia
+
+Any company with conversation logs can turn them into its own benchmark,
+cheap and aligned with what its users actually ask for, and use it to choose
+a model or validate product changes.

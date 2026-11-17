@@ -1,0 +1,101 @@
+---
+titulo: "De 80% para 13% de erro: pipeline de LLM para extrair o raciocínio de decisões jurídicas"
+titulo_curto: "Pipeline de extração de decisões jurídicas"
+resumo: "Redesenhei, avaliei e levei para modelos open-weight um pipeline de LLM que extrai o raciocínio de decisões jurídicas longas para um cliente do setor público. A taxa de erro caiu de 80% para 13% numa avaliação pareada com especialistas."
+organizacao: FGV EMAp
+papel: AI Consultant
+periodo: out/2025 – presente
+camadas: [prompt-engineering, orquestracao, resultado-mensuravel]
+status_publicacao: pronto
+ordem: 2
+frase_destaque: "Erro reduzido em 84% (80% → 13%) e completude ampliada em 55% (54% → 84%)."
+stack:
+  - Modelo proprietário de fronteira
+  - Modelos open-weight
+  - Saída JSON estruturada
+  - Python
+  - Embeddings
+  - Teste de Wald
+  - Intervalo de Wilson
+---
+
+import PipelineDiagram from '../../../components/PipelineDiagram.astro';
+import ResultsTable from '../../../components/ResultsTable.astro';
+import BeforeAfterBar from '../../../components/BeforeAfterBar.astro';
+
+## Contexto e problema
+
+Um órgão público usa um pipeline de LLM em produção para montar uma base de
+conhecimento jurídico a partir de decisões longas. O pipeline extrai os
+argumentos das partes, extrai o raciocínio de cada decisão e sintetiza o
+entendimento final. Uma avaliação anterior com especialistas tinha encontrado
+erros na maior parte das saídas.
+
+O pipeline é sequencial, então um erro no início contamina todas as etapas
+seguintes, e a solução precisava rodar na infraestrutura do próprio cliente,
+com modelos open-weight.
+
+## O que foi feito
+
+<PipelineDiagram
+  rotulo="Pipeline de extração, da segmentação à base de conhecimento"
+  etapas={['Segmentação', 'Extração', 'Síntese', 'Verificação', 'Base de conhecimento']}
+/>
+
+- **Fase 1:** reconstruí os prompts com especialistas do domínio num modelo de
+  fronteira e medi o ganho com uma avaliação pareada: os mesmos documentos,
+  antes e depois, com teste formal de significância.
+- **Fase 2:** levei a melhoria para o modelo open-weight usado em produção,
+  com uma segmentação melhor dos documentos e verificações automáticas que
+  sinalizam saídas suspeitas para revisão humana.
+- **Fase 3:** avaliei modelos candidatos com prompts e documentos fixos, para
+  separar o ganho que vinha dos prompts do ganho que vinha do modelo.
+
+## Minha contribuição
+
+- Liderança da equipe do projeto
+- Participação técnica em todas as atividades:
+  - Desenho da tarefa e da arquitetura de prompts
+  - Condução dos ciclos de refinamento com os especialistas
+  - Desenho do protocolo de avaliação pareada e da análise estatística
+  - Instrumento de priorização de erros construído com os especialistas
+  - Mecanismos de pré e pós-processamento
+  - Redação técnica dos relatórios
+
+## Resultados
+
+<ResultsTable rotulo="Fase 1: antes e depois, 99 documentos pareados">
+
+| Métrica (fase 1, 99 documentos pareados) | Antes | Depois |
+|---|---|---|
+| Extração do raciocínio: taxa de erro | 80,2% | **12,8%** |
+| Extração de argumentos: completude | 54,1% | **83,7%** |
+
+</ResultsTable>
+
+<BeforeAfterBar
+  titulo="Extração do raciocínio: taxa de erro"
+  unidade="%"
+  barras={[
+    { rotulo: 'Antes', valor: 80.2 },
+    { rotulo: 'Depois', valor: 12.8, destaque: true },
+  ]}
+  nota="Fase 1, 99 documentos pareados."
+/>
+
+- As duas diferenças são estatisticamente significativas (teste de Wald,
+  p &lt; 0,001).
+- No modelo open-weight de produção (fase 2), a taxa de erro por fundamento
+  extraído caiu de 75,0% para 48,6% nos mesmos 99 documentos.
+- Com os prompts fixos (fase 3), o ganho dos prompts se manteve nos modelos
+  novos, e a melhor configuração levou os documentos com algum erro de 73,1%
+  para 25,3%.
+
+## Aprendizados
+
+- **Avaliação pareada em vez de dois números soltos:** comparar os mesmos
+  documentos elimina a variância da amostra e permite um teste formal.
+- **Isolar variáveis:** fixar prompts e documentos é o único jeito de saber
+  se a melhora veio do modelo ou do prompt.
+- **O verificador sinaliza, o humano decide:** nada é descartado
+  automaticamente.

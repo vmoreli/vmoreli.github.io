@@ -1,0 +1,11 @@
+# Fonte editorial: contém a lista proibida e material confidencial. Nunca commitar.
+content-src/
+# Rascunhos de cases: só para astro dev local.
+src/content/rascunhos/
+
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+.DS_Store

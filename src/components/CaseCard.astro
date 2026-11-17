@@ -1,0 +1,101 @@
+---
+// Card de case study na home: eyebrow (período · organização), título, resumo
+// em uma ou duas frases e link. Sem número em destaque: o resultado aparece
+// dentro do resumo, com contexto.
+import { ehRascunho, slugDe, type CaseEntry } from '../lib/cases';
+import { caminho, idiomaDe, t } from '../lib/i18n';
+
+interface Props {
+  entry: CaseEntry;
+}
+
+const { entry } = Astro.props;
+const d = entry.data;
+const idioma = idiomaDe(Astro.url);
+const tx = t(idioma);
+const href = caminho(idioma, `/cases/${slugDe(entry)}/`);
+const tituloId = `card-${slugDe(entry)}`;
+---
+<article class="card" aria-labelledby={tituloId}>
+  <p class="kicker">{d.periodo} · {d.organizacao}</p>
+  {ehRascunho(entry) && <p class="rascunho">{tx.rascunho}</p>}
+  <h3 id={tituloId}>
+    <a href={href}>{d.titulo_curto ?? d.titulo}</a>
+  </h3>
+  <p class="resumo">{d.resumo}</p>
+  <span class="text-link ver" aria-hidden="true">{tx.lerCase}</span>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    height: 100%;
+    padding: clamp(1.4rem, 3vw, 2.5rem);
+    transition: background-color 0.15s ease;
+  }
+  .card:hover,
+  .card:focus-within {
+    background: var(--bg-subtle);
+  }
+  .kicker {
+    font-size: 0.72rem;
+  }
+  h3 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.3rem, 2vw, 1.65rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+  h3 a {
+    color: var(--fg);
+    text-decoration: none;
+  }
+  /* Card inteiro clicável, mantendo um único link no leitor de tela. */
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  h3 a:focus-visible {
+    outline: none;
+  }
+  .card:has(h3 a:focus-visible) {
+    outline: 2px solid var(--fg);
+    outline-offset: -4px;
+  }
+  .resumo {
+    margin: 0;
+    color: var(--fg-muted);
+  }
+  .ver {
+    margin-top: auto;
+    min-height: 0;
+    padding-top: var(--space-2);
+    font-size: 0.72rem;
+  }
+  .card:hover h3 a {
+    color: var(--accent);
+  }
+  .ver {
+    color: var(--accent);
+  }
+  .card:hover .ver {
+    text-decoration: underline 2px;
+    text-underline-offset: 0.4em;
+  }
+  .rascunho {
+    align-self: flex-start;
+    margin: 0;
+    padding: 0.15rem 0.45rem;
+    border: 1px dashed var(--fg-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+</style>

@@ -1,0 +1,77 @@
+/*
+ * Tokens de design. Linguagem visual: papel e tinta, com um azul como acento e
+ * um laranja reservado aos gráficos (cor sempre com o mesmo significado).
+ * Cores dos gráficos: slots 1 e 2 da paleta categórica validada (skill dataviz),
+ * conferidas contra as superfícies abaixo nos dois temas.
+ * Contraste AA medido contra --bg.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg: #F2F0E9;          /* papel */
+  --bg-subtle: #FAF9F4;   /* papel claro: hover de cards, tabelas */
+  --fg: #0B0C0A;          /* tinta */
+  --fg-muted: #5E5C55;    /* 6,0:1 sobre --bg */
+  --rule: #D2CFC5;
+  --accent: #1C5CAB;      /* azul para texto: 5,8:1 sobre --bg */
+  --on-accent: #F2F0E9;
+  /* Gráficos: série 1 = depois / resultado; série 2 = antes / referência.
+     A série 2 fica em 2,8:1 no claro: aceito porque toda barra tem o valor em texto. */
+  --series-1: #2A78D6;
+  --series-2: #EB6834;
+  --footer-bg: #0B0C0A;
+  --footer-fg: #FAF9F4;
+  --footer-muted: #AAA89F;
+
+  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --space-6: 4rem;
+  --section-pad: clamp(4rem, 8vw, 8rem);
+
+  --measure: 70ch;
+  --wide: 1440px;
+  --pad: clamp(1rem, 4vw, 4rem);
+  --header-h: 72px;
+  --radius: 0;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0F100E;
+    --bg-subtle: #181916;
+    --fg: #F2F0E9;
+    --fg-muted: #A8A69D;
+    --rule: #33342F;
+    --accent: #6DA7EC;      /* 7,6:1 sobre --bg escuro */
+    --on-accent: #0F100E;
+    --series-1: #3987E5;
+    --series-2: #D95926;
+    --footer-bg: #050504;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0F100E;
+  --bg-subtle: #181916;
+  --fg: #F2F0E9;
+  --fg-muted: #A8A69D;
+  --rule: #33342F;
+  --accent: #6DA7EC;
+  --on-accent: #0F100E;
+  --series-1: #3987E5;
+  --series-2: #D95926;
+  --footer-bg: #050504;
+}

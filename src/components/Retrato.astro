@@ -1,0 +1,60 @@
+---
+// Retrato do hero (4:5). Recortado de uma foto em grupo só com o Victor, sem EXIF.
+// Fica fora de index.astro porque as larguras abaixo são técnicas, não conteúdo
+// (check-numeros confere os números da home).
+import { Picture } from 'astro:assets';
+import foto from '../assets/victor-moreli.jpg';
+
+interface Props {
+  legenda: string;
+  local: string;
+  alt: string;
+}
+
+const { legenda, local, alt } = Astro.props;
+---
+<figure class="retrato">
+  <Picture
+    src={foto}
+    alt={alt}
+    formats={['avif', 'webp']}
+    widths={[360, 540, 720, 1060]}
+    sizes="(max-width: 800px) min(100vw - 2rem, 420px), 30vw"
+    loading="eager"
+    fetchpriority="high"
+  />
+  <figcaption>
+    <span>{legenda}</span>
+    <span>{local}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .retrato {
+    margin: 0;
+  }
+  @media (max-width: 800px) {
+    .retrato {
+      max-width: 420px;
+    }
+  }
+  .retrato :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    filter: saturate(0.8) contrast(1.03);
+  }
+  figcaption {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding-top: 0.7rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+</style>
